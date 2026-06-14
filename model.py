@@ -191,7 +191,7 @@ class EmergencyServiceSystemSim:
                     new_state.current_calls.append(self._queue.pop(0))
                     new_state.available_servers -= 1
 
-            case EventType.Service:
+            case EventType.Service if self.current_state.current_calls:
                 new_state.available_servers += 1
                 new_state.current_calls.pop(0)
 
@@ -229,15 +229,15 @@ class EmergencyServiceSystemSim:
 
 if __name__ == "__main__":
     sim = EmergencyServiceSystemSim(
-        lambda: random.expovariate(0.5),
-        lambda: random.gammavariate(2.0, 1.5),
-        lambda: random.expovariate(0.1),
-        lambda: random.gammavariate(3.0, 1.0),
+        lambda: random.expovariate(1.0),
+        lambda: random.gammavariate(21, 0.0259167),
+        lambda: random.expovariate(0.2),
+        lambda: random.gammavariate(0.05, 20),
         servers=3,
     )
 
     print("Running Emergency Service System Simulation...\n")
-    for _ in range(15):
+    for _ in range(30):
         sim.step()
 
     print(f"{'Event Time':<15} | {'Clients'} | {'Available'} | {'Broken'}")
