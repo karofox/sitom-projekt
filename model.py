@@ -55,8 +55,11 @@ class SystemState:
     total_servers: int = 0  # wszystkie karetki
     available_servers: int = 0  # dostępne karetki
     broken_servers: int = 0  # zepsute karetki
-    clients: int = 0  # liczba obecnie obsługiwanych wezwań
-    current_call: Call | None = None
+    current_calls: list[Call] = field(default_factory=list)
+
+    @property
+    def clients(self) -> int:
+        return len(self.current_calls)
 
 
 @dataclass
@@ -74,6 +77,7 @@ class EmergencyServiceSystemSim:
         service_time_fn: Callable[[], float],
         breakdown_time_fn: Callable[[], float],
         repair_time_fn: Callable[[], float],
+        servers: int = 2,
     ) -> None:
         self._arrival_time_fn = arrival_time_fn
         self._service_time_fn = service_time_fn
@@ -84,10 +88,9 @@ class EmergencyServiceSystemSim:
             TrajectoryPoint(
                 time=0.0,
                 state=SystemState(
-                    total_servers=1,
-                    available_servers=1,
+                    total_servers=servers,
+                    available_servers=servers,
                     broken_servers=0,
-                    clients=0,
                 ),
             )
         ]
@@ -187,37 +190,39 @@ class EmergencyServiceSystemSim:
                 self.__add_call_to_queue(call)
 
                 if self.current_state.available_servers > 0:
-                    new_state.current_call = self._queue.pop(0)
+                    new_state.current_calls.append(self._queue.pop(0))
                     new_state.available_servers -= 1
-                    new_state.clients += 1
 
             case EventType.Service:
                 new_state.available_servers += 1
-                new_state.clients -= 1
-                new_state.current_call = None
+                new_state.current_calls.pop(0)
 
                 if self._queue:
-                    new_state.current_call = self._queue.pop(0)
+                    new_state.current_calls.append(self._queue.pop(0))
                     new_state.available_servers -= 1
-                    new_state.clients += 1
 
             case EventType.Breakdown:
-                new_state.available_servers -= 1
                 new_state.broken_servers += 1
-                current_call = self.current_state.current_call
-                new_state.current_call = None
-                self.__add_call_to_queue(current_call)  # type: ignore
+
+                if self.current_state.clients > 0:
+                    current_call = new_state.current_calls.pop(0)
+                    self.__add_call_to_queue(current_call)  # type: ignore
+                else:
+                    new_state.available_servers -= 1
 
             case EventType.Repair:
                 new_state.available_servers += 1
                 new_state.broken_servers -= 1
 
                 if self._queue:
-                    new_state.current_call = self._queue.pop(0)
+                    new_state.current_calls.append(self._queue.pop(0))
                     new_state.available_servers -= 1
-                    new_state.clients += 1
 
         self._trajectory.append(TrajectoryPoint(current_event.time, new_state))
+        print(current_event)
+        print(self.current_state)
+        print(self._queue)
+        print()
 
     def __add_call_to_queue(self, call: Call) -> None:
         self._queue.append(call)
@@ -227,9 +232,10 @@ class EmergencyServiceSystemSim:
 if __name__ == "__main__":
     sim = EmergencyServiceSystemSim(
         lambda: random.expovariate(0.5),
-        lambda: random.gammavariate(alpha=2.0, beta=1.5),
+        lambda: random.gammavariate(2.0, 1.5),
         lambda: random.expovariate(0.1),
         lambda: random.gammavariate(3.0, 1.0),
+        servers=3,
     )
 
     print("Running Emergency Service System Simulation...\n")
@@ -239,4 +245,6 @@ if __name__ == "__main__":
     print(f"{'Event Time':<15} | {'Clients'} | {'Available'} | {'Broken'}")
     print("-" * 50)
     for point in sim.trajectory:
-        print(f"{point.time:<15.3f} | {point.state.clients:<7} | {point.state.available_servers:<9} | {point.state.broken_servers}")
+        print(
+            f"{point.time:<15.3f} | {point.state.clients:<7} | {point.state.available_servers:<9} | {point.state.broken_servers}"
+        )
