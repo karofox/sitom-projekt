@@ -52,7 +52,6 @@ class Call:
 class SystemState:
     """Stan systemu, przechowuje charakterystyki w danym czasie."""
 
-    total_servers: int = 0  # wszystkie karetki
     available_servers: int = 0  # dostępne karetki
     broken_servers: int = 0  # zepsute karetki
     current_calls: list[Call] = field(default_factory=list)
@@ -88,7 +87,6 @@ class EmergencyServiceSystemSim:
             TrajectoryPoint(
                 time=0.0,
                 state=SystemState(
-                    total_servers=servers,
                     available_servers=servers,
                     broken_servers=0,
                 ),
