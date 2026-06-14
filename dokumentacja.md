@@ -55,9 +55,9 @@ Wezwania mogą mieć przypisany jeden z trzech priorytetów (reprezentowanych p
 
 Zdarzenia typu `EventType.Arrival` oraz `EventType.Breakdown` korzystają z rozkłady wykładniczego. Wezwania pogotowia ratunkowego lub awarie karetek to procesy Poissona, rzadkie w czasie i niezależne.
 
-Parametr alfa rozkładu wykładniczego można w obu tych przypadkach interpretować jako średnia częstotliwość występowania zdarzenia w jednostce czasu. 
+Parametr alfa rozkładu wykładniczego można w obu tych przypadkach to wartość oczekiwana czasu wystąpienia zdarzenia.
 
-Dla zdarzenia `EventType.Arrival` przyjęto alfa = 0.5, co odpowiada wezwaniom średnio co 2 godziny. Dla `EventType.Breakdown` przyjęto alfa = 0.1, co odpowiada awarii średnio co 10 godzin.
+Dla zdarzenia `EventType.Arrival` przyjęto alfa = 1.0, co odpowiada wezwaniom średnio co 1 godzinę. Dla `EventType.Breakdown` przyjęto alfa = 0.2, co odpowiada awarii średnio co 10 godzin. Za awarię uznajemy również potrzebę wymiany wyposażenia w karetce.
 
 Zdarzenia typu `EventType.Service` oraz `EventType.Repair` korzystają z rozkładu Gamma, który jest uogólnionym rozkładem Erlanga, przeznaczonym do modelowania czasu oczekiwania.
 
@@ -67,6 +67,6 @@ Dla `EventType.Service` przyjęto parametr kształtu rozkładu gamma alfa = 21 o
 
 Dla tego typu zdarzenia parametry zostały określone na podstawie reportu GUS "Zdrowie i ochrona Zdrowia w 2024r." (https://stat.gov.pl/obszary-tematyczne/zdrowie/zdrowie/zdrowie-i-ochrona-zdrowia-w-2024-r-,1,15.html) dla danych krajowych dla miast powyżej 10 tys. mieszkańców. Za czas obsługi wezwania uznajemy czas dotarcia karetki (na podstawie raportu) oraz szacowany czas udzielenia pomocy oraz powrotu do szpitala.
 
-Dla `EventType.Repair` przyjęto parametr kształtu rozkładu gamma alfa = 3.0 oraz parametr skali beta = 1.0. Wynika z nich:
-- alfa * beta = 3.0, średni czas naprawy karetki,
-- sqrt(alfa) * beta ~ 1.73, odchylenie standardowe czasu obsługi wezwana.
+Dla `EventType.Repair` przyjęto parametr kształtu rozkładu gamma alfa = 0.05 oraz parametr skali beta = 20. Wynika z nich:
+- alfa * beta = 1.0, średni czas naprawy karetki lub wymiany wyposażenia,
+- sqrt(alfa) * beta ~ 4,47, odchylenie standardowe czasu obsługi awarii.
